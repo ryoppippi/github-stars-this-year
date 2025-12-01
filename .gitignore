@@ -171,3 +171,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# nix
+.pre-commit-config.yaml
