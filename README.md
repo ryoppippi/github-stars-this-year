@@ -10,6 +10,9 @@ To run:
 
 ```bash
 bun run index.ts
+
+# or recommend to pass GITHUB_TOKEN
+GITHUB_TOKEN=(gh auth token) bun run index.ts
 ```
 
 for nix users:
