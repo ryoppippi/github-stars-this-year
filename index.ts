@@ -1,7 +1,7 @@
 import { $ } from "bun";
 import pLimit from "p-limit";
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_TOKEN = Bun.env.GITHUB_TOKEN;
 const GITHUB_API_URL = "https://api.github.com";
 
 interface Repository {
