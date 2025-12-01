@@ -1,8 +1,26 @@
 import { $ } from "bun";
 import pLimit from "p-limit";
 
-const GITHUB_TOKEN = Bun.env.GITHUB_TOKEN;
+let GITHUB_TOKEN = Bun.env.GITHUB_TOKEN;
 const GITHUB_API_URL = "https://api.github.com";
+
+async function getGhAuthToken(): Promise<string | null> {
+	try {
+		const result = await $`gh auth token`.text();
+		return result.trim() || null;
+	} catch {
+		return null;
+	}
+}
+
+async function promptYesNo(message: string): Promise<boolean> {
+	process.stdout.write(`${message} [y/N]: `);
+	for await (const line of console) {
+		const answer = line.trim().toLowerCase();
+		return answer === "y" || answer === "yes";
+	}
+	return false;
+}
 
 interface Repository {
 	name: string;
@@ -115,11 +133,30 @@ async function getStarsThisYear(owner: string, repo: string): Promise<number> {
 
 if (import.meta.main) {
 	if (!GITHUB_TOKEN) {
-		console.error("Error: GITHUB_TOKEN environment variable is not set");
-		console.error(
-			"Run this script with: gh do -e GITHUB_TOKEN -- bun run index.ts",
-		);
-		process.exit(1);
+		const ghToken = await getGhAuthToken();
+		if (ghToken) {
+			const useGhToken = await promptYesNo(
+				"GITHUB_TOKEN is not set. Would you like to use the token from `gh auth token`?",
+			);
+			if (useGhToken) {
+				GITHUB_TOKEN = ghToken;
+				console.log("✓ Using token from gh auth\n");
+			} else {
+				console.error("Error: GITHUB_TOKEN environment variable is not set");
+				console.error(
+					"Run this script with: gh do -e GITHUB_TOKEN -- bun run index.ts",
+				);
+				process.exit(1);
+			}
+		} else {
+			console.error("Error: GITHUB_TOKEN environment variable is not set");
+			console.error("And `gh auth token` is not available.");
+			console.error(
+				"Run this script with: gh do -e GITHUB_TOKEN -- bun run index.ts",
+			);
+			console.error("Or authenticate with: gh auth login");
+			process.exit(1);
+		}
 	}
 
 	const currentYear = new Date().getFullYear();
